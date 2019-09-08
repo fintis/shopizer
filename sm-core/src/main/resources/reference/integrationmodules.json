@@ -104,6 +104,16 @@
 		"image":"braintree.jpg",
 		"configuration":[{"env":"TEST","scheme":"https","host":"NOTREQUIRED","port":"NOTREQUIRED","uri":"NOTREQUIRED"},{"env":"PROD","scheme":"https","host":"NOTREQUIRED","port":"NOTREQUIRED","uri":"NOTREQUIRED"}]
 
+	},
+	{
+		"module": "PAYMENT",
+		"code": "flutterwave",
+		"type":"creditcard",
+		"version":"",
+		"regions": ["NG"],
+		"image":"stripe.png",
+		"configuration":[{"env":"TEST","scheme":"https","host":"www.stripe.com","port":"443","uri":"/"},{"env":"PROD","scheme":"https","host":"www.stripe.com","port":"443","uri":"/"}]
+
 	}
 
 ] 
