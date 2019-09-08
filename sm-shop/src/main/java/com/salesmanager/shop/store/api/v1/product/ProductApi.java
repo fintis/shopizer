@@ -1,5 +1,6 @@
 package com.salesmanager.shop.store.api.v1.product;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,23 +22,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import com.salesmanager.core.business.services.catalog.category.CategoryService;
-import com.salesmanager.core.business.services.catalog.product.PricingService;
 import com.salesmanager.core.business.services.catalog.product.ProductService;
-import com.salesmanager.core.business.services.catalog.product.attribute.ProductAttributeService;
-import com.salesmanager.core.business.services.customer.CustomerService;
-import com.salesmanager.core.business.services.merchant.MerchantStoreService;
 import com.salesmanager.core.model.catalog.category.Category;
 import com.salesmanager.core.model.catalog.product.Product;
 import com.salesmanager.core.model.catalog.product.ProductCriteria;
 import com.salesmanager.core.model.merchant.MerchantStore;
 import com.salesmanager.core.model.reference.language.Language;
+import com.salesmanager.shop.model.catalog.product.LightPersistableProduct;
 import com.salesmanager.shop.model.catalog.product.PersistableProduct;
 import com.salesmanager.shop.model.catalog.product.ReadableProduct;
 import com.salesmanager.shop.model.catalog.product.ReadableProductList;
 import com.salesmanager.shop.store.controller.product.facade.ProductFacade;
-import com.salesmanager.shop.store.controller.store.facade.StoreFacade;
 import com.salesmanager.shop.utils.ImageFilePath;
-import com.salesmanager.shop.utils.LanguageUtils;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import springfox.documentation.annotations.ApiIgnore;
@@ -50,15 +47,8 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping("/api/v1")
 public class ProductApi {
 
-  @Inject private MerchantStoreService merchantStoreService;
 
   @Inject private CategoryService categoryService;
-
-  @Inject private CustomerService customerService;
-
-  @Inject private PricingService pricingService;
-
-  @Inject private ProductAttributeService productAttributeService;
 
   @Inject private ProductService productService;
 
@@ -68,15 +58,11 @@ public class ProductApi {
   @Qualifier("img")
   private ImageFilePath imageUtils;
 
-  @Inject private StoreFacade storeFacade;
-
-  @Inject private LanguageUtils languageUtils;
-
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductApi.class);
 
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(
-      value = {"/private/products", "/auth/products"},
+      value = {"/private/product", "/auth/products"},//private for api //auth for user adding products
       method = RequestMethod.POST)
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "String", defaultValue = "DEFAULT"),
@@ -89,23 +75,14 @@ public class ProductApi {
       HttpServletRequest request,
       HttpServletResponse response) {
 
-    try {
       productFacade.saveProduct(merchantStore, product, language);
       return product;
-    } catch (Exception e) {
-      LOGGER.error("Error while creating product", e);
-      try {
-        response.sendError(503, "Error while creating product " + e.getMessage());
-      } catch (Exception ignore) {
-      }
 
-      return null;
-    }
   }
 
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(
-      value = {"/private/products/{id}", "/auth/products/{id}"},
+      value = {"/private/product/{id}", "/auth/products/{id}"},
       method = RequestMethod.PUT)
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "String", defaultValue = "DEFAULT"),
@@ -131,10 +108,28 @@ public class ProductApi {
       return null;
     }
   }
+  
+  @ResponseStatus(HttpStatus.OK)
+  @PatchMapping(
+      value = "/private/product/{id}",
+      produces = {APPLICATION_JSON_VALUE})
+  @ApiImplicitParams({
+      @ApiImplicitParam(name = "store", dataType = "string", defaultValue = "DEFAULT"),
+      @ApiImplicitParam(name = "lang", dataType = "string", defaultValue = "en")
+  })
+  public void update(
+      @PathVariable Long id,
+      @Valid @RequestBody LightPersistableProduct product,
+      @ApiIgnore MerchantStore merchantStore,
+      @ApiIgnore Language language) {
+      productFacade.update(id, product, merchantStore, language);
+      return;
+
+  }
 
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(
-      value = {"/private/products/{id}", "/auth/products/{id}"},
+      value = {"/private/product/{id}", "/auth/products/{id}"},
       method = RequestMethod.DELETE)
   public void delete(
       @PathVariable Long id, HttpServletRequest request, HttpServletResponse response) {
@@ -383,8 +378,10 @@ public class ProductApi {
       throws Exception {
 
     ProductCriteria criteria = new ProductCriteria();
-    if (!StringUtils.isBlank(lang)) {
+    if (lang != null) {
       criteria.setLanguage(lang);
+    } else {
+      criteria.setLanguage(language.getCode());
     }
     if (!StringUtils.isBlank(status)) {
       criteria.setStatus(status);
@@ -438,7 +435,7 @@ public class ProductApi {
    * @throws Exception
    *     <p>/api/v1/product/123
    */
-  @RequestMapping(value = "/products/{id}", method = RequestMethod.GET)
+  @RequestMapping(value = "/product/{id}", method = RequestMethod.GET)
   @ResponseBody
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "String", defaultValue = "DEFAULT"),
@@ -464,8 +461,8 @@ public class ProductApi {
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(
       value = {
-        "/private/products/{productId}/category/{categoryId}",
-        "/auth/products/{productId}/category/{categoryId}"
+        "/private/product/{productId}/category/{categoryId}",
+        "/auth/product/{productId}/category/{categoryId}"
       },
       method = RequestMethod.POST)
   @ApiImplicitParams({
@@ -500,8 +497,8 @@ public class ProductApi {
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(
       value = {
-        "/private/products/{productId}/category/{categoryId}",
-        "/auth/products/{productId}/category/{categoryId}"
+        "/private/product/{productId}/category/{categoryId}",
+        "/auth/product/{productId}/category/{categoryId}"
       },
       method = RequestMethod.DELETE)
   @ApiImplicitParams({

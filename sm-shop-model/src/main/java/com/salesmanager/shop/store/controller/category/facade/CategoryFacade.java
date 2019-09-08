@@ -19,7 +19,7 @@ public interface CategoryFacade {
      * @param filter
      * @return List<ReadableCategory>
      */
-	List<ReadableCategory> getCategoryHierarchy(MerchantStore store, int depth, Language language, String filter);
+	List<ReadableCategory> getCategoryHierarchy(MerchantStore store, int depth, Language language, List<String> filter);
 	
 	/**
 	 * 
@@ -70,4 +70,12 @@ public interface CategoryFacade {
 	 * @throws Exception
 	 */
 	boolean existByCode(MerchantStore store, String code);
+	
+	/**
+	 * Move a Category from a node to another node
+	 * @param child
+	 * @param parent
+	 * @param store
+	 */
+	void move(Long child, Long parent, MerchantStore store);
 }

@@ -57,6 +57,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -85,6 +86,9 @@ public class ShoppingOrderController extends AbstractController {
 	
 	private static final Logger LOGGER = LoggerFactory
 	.getLogger(ShoppingOrderController.class);
+	
+	@Value("${googleMapsKey}")
+	private String googleMapsKey;
 	
 	@Inject
 	private ShoppingCartFacade shoppingCartFacade;
@@ -145,6 +149,7 @@ public class ShoppingOrderController extends AbstractController {
 		MerchantStore store = (MerchantStore)request.getAttribute(Constants.MERCHANT_STORE);
 		Customer customer = (Customer)request.getSession().getAttribute(Constants.CUSTOMER);
 
+		model.addAttribute("googleMapsKey",googleMapsKey);
 		
 		/**
 		 * Shopping cart
@@ -254,7 +259,7 @@ public class ShoppingOrderController extends AbstractController {
 		 * hook for displaying or not delivery address configuration
 		 */
 		ShippingMetaData shippingMetaData = shippingService.getShippingMetaData(store);
-		model.addAttribute("shippingMetaData",shippingMetaData);//TODO DTO
+		model.addAttribute("shippingMetaData",shippingMetaData);
 		
 		/** shipping **/
 		ShippingQuote quote = null;
@@ -393,6 +398,15 @@ public class ShoppingOrderController extends AbstractController {
 		//if order summary has to be re-used
 		super.setSessionAttribute(Constants.ORDER_SUMMARY, orderTotalSummary, request);
 
+		//display hacks
+		if(!StringUtils.isBlank(googleMapsKey)) {
+		  model.addAttribute("disabled","true");
+		  model.addAttribute("cssClass","");
+		} else {
+		  model.addAttribute("disabled","false");
+		  model.addAttribute("cssClass","required");
+		}
+		
 		model.addAttribute("order",order);
 		model.addAttribute("paymentMethods", paymentMethods);
 		
@@ -414,6 +428,15 @@ public class ShoppingOrderController extends AbstractController {
 			StringBuilder template = new StringBuilder().append(ControllerConstants.Tiles.Pages.timeout).append(".").append(store.getStoreTemplate());
 			return template.toString();	
 		}
+		model.addAttribute("googleMapsKey",googleMapsKey);
+	      //display hacks
+        if(!StringUtils.isBlank(googleMapsKey)) {
+          model.addAttribute("disabled","true");
+          model.addAttribute("cssClass","");
+        } else {
+          model.addAttribute("disabled","false");
+          model.addAttribute("cssClass","required");
+        }
 		
 		@SuppressWarnings("unchecked")
 		Map<String, Object> configs = (Map<String, Object>) request.getAttribute(Constants.REQUEST_CONFIGS);
@@ -479,7 +502,7 @@ public class ShoppingOrderController extends AbstractController {
         		authCustomer = customerFacade.getCustomerByUserName(auth.getName(), store);
         		//set id and authentication information
         		customer.setUserName(authCustomer.getNick());
-        		customer.setEncodedPassword(authCustomer.getPassword());
+        		//customer.setEncodedPassword(authCustomer.getPassword());
         		customer.setId(authCustomer.getId());
 	        } else {
 	        	//set customer id to null
@@ -490,7 +513,7 @@ public class ShoppingOrderController extends AbstractController {
 	        if(customer.getId()==null || customer.getId()==0) {//new customer
 	        	password = UserReset.generateRandomString();
 	        	String encodedPassword = passwordEncoder.encode(password);
-	        	customer.setEncodedPassword(encodedPassword);
+	        	//customer.setEncodedPassword(encodedPassword);
 	        }
 	        
 	        if(order.isShipToBillingAdress()) {
@@ -575,7 +598,7 @@ public class ShoppingOrderController extends AbstractController {
 		        	//send new user registration template
 					if(order.getCustomer().getId()==null || order.getCustomer().getId().longValue()==0) {
 						//send email for new customer
-						customer.setClearPassword(password);//set clear password for email
+						customer.setPassword(password);//set clear password for email
 						customer.setUserName(userName);
 						emailTemplatesUtils.sendRegistrationEmail( customer, store, locale, request.getContextPath() );
 					}
@@ -616,6 +639,15 @@ public class ShoppingOrderController extends AbstractController {
 		MerchantStore store = (MerchantStore)request.getAttribute(Constants.MERCHANT_STORE);
 		Language language = (Language)request.getAttribute("LANGUAGE");
 		//validate if session has expired
+		model.addAttribute("googleMapsKey",googleMapsKey);
+	      //display hacks
+        if(!StringUtils.isBlank(googleMapsKey)) {
+          model.addAttribute("disabled","true");
+          model.addAttribute("cssClass","");
+        } else {
+          model.addAttribute("disabled","false");
+          model.addAttribute("cssClass","required");
+        }
 		
 		model.addAttribute("order", order);
 		

@@ -49,7 +49,7 @@ public class CategoryApi {
 
   @GetMapping(
       value = "/category/{id}",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ApiOperation(
       httpMethod = "GET",
       value = "Get category list for an given Category id",
@@ -69,7 +69,8 @@ public class CategoryApi {
       @PathVariable(name = "id") Long categoryId, 
       @ApiIgnore MerchantStore merchantStore, 
       @ApiIgnore Language language) {
-    return categoryFacade.getById(merchantStore, categoryId, language);
+    ReadableCategory category = categoryFacade.getById(merchantStore, categoryId, language);
+    return category;
   }
   
   @ResponseStatus(HttpStatus.OK)
@@ -96,27 +97,27 @@ public class CategoryApi {
    */
   @GetMapping(
       value = "/category",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ApiOperation(
       httpMethod = "GET",
-      value = "Get category hierarchy from root",
+      value = "Get category hierarchy from root. Supports filtering FEATURED_CATEGORIES and VISIBLE ONLY by adding ?filter=[featured] or ?filter=[visible] or ? filter=[featured,visible",
       notes = "Does not return any product attached")
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "string", defaultValue = "DEFAULT"),
       @ApiImplicitParam(name = "lang", dataType = "string", defaultValue = "en")
   })
   public List<ReadableCategory> getFiltered(
-      @RequestParam(value = "filter", required = false) String filter,
+      @RequestParam(value = "filter", required = false) List<String> filter,
       @ApiIgnore MerchantStore merchantStore,
       @ApiIgnore Language language) {
     return categoryFacade.getCategoryHierarchy(
         merchantStore, DEFAULT_CATEGORY_DEPTH, language, filter);
   }
   
-
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping(
       value = "/private/category",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "string", defaultValue = "DEFAULT"),
       @ApiImplicitParam(name = "lang", dataType = "string", defaultValue = "en")
@@ -130,7 +131,7 @@ public class CategoryApi {
 
   @PutMapping(
       value = "/private/category/{id}",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ApiImplicitParams({
       @ApiImplicitParam(name = "store", dataType = "string", defaultValue = "DEFAULT")
   })
@@ -138,12 +139,13 @@ public class CategoryApi {
       @PathVariable Long id,
       @Valid @RequestBody PersistableCategory category,
       @ApiIgnore MerchantStore merchantStore) {
+    category.setId(id);
     return categoryFacade.saveCategory(merchantStore, category);
   }
   
-/*  @PutMapping(
+  @PutMapping(
       value = "/private/category/{id}/move/{parent}",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ApiOperation(
       httpMethod = "PUT",
       value = "Move a category under another category",
@@ -155,12 +157,13 @@ public class CategoryApi {
       @PathVariable Long id,
       @PathVariable Long parent,
       @ApiIgnore MerchantStore merchantStore) {
+    categoryFacade.move(id, parent, merchantStore);
     return;
-  }*/
+  }
 
   @DeleteMapping(
       value = "/private/category/{id}",
-      produces = {APPLICATION_JSON_VALUE, APPLICATION_XML_VALUE})
+      produces = {APPLICATION_JSON_VALUE})
   @ResponseStatus(NO_CONTENT)
   public void delete(@PathVariable("id") Long categoryId) {
     categoryFacade.deleteCategory(categoryId);

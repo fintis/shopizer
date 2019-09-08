@@ -28,6 +28,7 @@ import com.salesmanager.core.model.reference.language.Language;
 import com.salesmanager.core.model.tax.taxclass.TaxClass;
 import com.salesmanager.shop.admin.model.web.Menu;
 import com.salesmanager.shop.constants.Constants;
+import com.salesmanager.shop.utils.CategoryUtils;
 import com.salesmanager.shop.utils.DateUtil;
 import com.salesmanager.shop.utils.LabelUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -592,6 +593,7 @@ public class ProductController {
 			availability.setProductStatus(pAvailability.getProductStatus());
 			availability.setRegion(pAvailability.getRegion());
 			availability.setRegionVariant(pAvailability.getRegionVariant());
+			availability.setProduct(newProduct);
 
 
 			
@@ -657,6 +659,7 @@ public class ProductController {
 			attribute.setProductOption(pAttribute.getProductOption());
 			attribute.setProductOptionSortOrder(pAttribute.getProductOptionSortOrder());
 			attribute.setProductOptionValue(pAttribute.getProductOptionValue());
+			attribute.setProduct(newProduct);
 			attributes.add(attribute);
 						
 		}
@@ -671,6 +674,7 @@ public class ProductController {
 			relationship.setCode(pRelationship.getCode());
 			relationship.setRelatedProduct(pRelationship.getRelatedProduct());
 			relationship.setStore(store);
+			relationship.setProduct(newProduct);
 			relationships.add(relationship);
 
 		}
@@ -691,6 +695,7 @@ public class ProductController {
 			description.setMetatagDescription(pDescription.getMetatagDescription());
 			description.setMetatagKeywords(pDescription.getMetatagKeywords());
 			description.setMetatagTitle(pDescription.getMetatagTitle());
+			description.setProduct(newProduct);
 			descsset.add(description);
 			desclist.add(description);
 		}
@@ -818,9 +823,10 @@ public class ProductController {
 
 		//get parent categories
 		List<Category> categories = categoryService.listByStore(store,language);
+		List<com.salesmanager.shop.admin.model.catalog.Category> readableCategories = CategoryUtils.readableCategoryListConverter(categories, language);
 		
 		model.addAttribute("product", product);
-		model.addAttribute("categories", categories);
+		model.addAttribute("categories", readableCategories);
 		return "catalogue-product-categories";
 		
 	}
@@ -888,8 +894,8 @@ public class ProductController {
 				Map entry = new HashMap();
 				entry.put("categoryId", category.getId());
 				
-				List<CategoryDescription> descriptions = category.getDescriptions();
-				String categoryName = category.getDescriptions().get(0).getName();
+				Set<CategoryDescription> descriptions = category.getDescriptions();
+				String categoryName = category.getDescriptions().iterator().next().getName();
 				for(CategoryDescription description : descriptions){
 					if(description.getLanguage().getCode().equals(language.getCode())) {
 						categoryName = description.getName();
@@ -1009,8 +1015,10 @@ public class ProductController {
 		
 		productService.update(product);
 		
+		List<com.salesmanager.shop.admin.model.catalog.Category> readableCategories = CategoryUtils.readableCategoryListConverter(categories, language);
+		
 		model.addAttribute("product", product);
-		model.addAttribute("categories", categories);
+		model.addAttribute("categories", readableCategories);
 		
 		return "catalogue-product-categories";
 		

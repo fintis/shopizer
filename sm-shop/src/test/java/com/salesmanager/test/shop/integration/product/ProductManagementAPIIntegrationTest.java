@@ -4,7 +4,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,7 +76,7 @@ public class ProductManagementAPIIntegrationTest extends ServicesTestSupport {
         final ResponseEntity<PersistableCategory> categoryResponse = testRestTemplate.postForEntity("/api/v1/private/category?store=" + Constants.DEFAULT_STORE, categoryEntity,
                 PersistableCategory.class);
         final PersistableCategory cat = categoryResponse.getBody();
-        assertThat(categoryResponse.getStatusCode(), is(OK));
+        assertThat(categoryResponse.getStatusCode(), is(CREATED));
         assertNotNull(cat.getId());
 
         final PersistableProduct product = new PersistableProduct();
@@ -91,7 +90,7 @@ public class ProductManagementAPIIntegrationTest extends ServicesTestSupport {
         product.setSku("123");
         final HttpEntity<PersistableProduct> entity = new HttpEntity<>(product, getHeader());
 
-        final ResponseEntity<PersistableProduct> response = testRestTemplate.postForEntity("/api/v1/private/products?store=" + Constants.DEFAULT_STORE, entity, PersistableProduct.class);
+        final ResponseEntity<PersistableProduct> response = testRestTemplate.postForEntity("/api/v1/private/product?store=" + Constants.DEFAULT_STORE, entity, PersistableProduct.class);
         assertThat(response.getStatusCode(), is(CREATED));
     }
 
@@ -394,7 +393,7 @@ public class ProductManagementAPIIntegrationTest extends ServicesTestSupport {
 
         final HttpEntity<String> httpEntity = new HttpEntity<>(getHeader());
 
-        restTemplate.exchange("http://localhost:8080/sm-shop/services/rest/products/DEFAULT/en/" + testCategoryID + "/" + testProductID, HttpMethod.DELETE, httpEntity, ReadableProduct.class);
+        restTemplate.exchange("http://localhost:8080/sm-shop/services/rest/product/DEFAULT/en/" + testCategoryID + "/" + testProductID, HttpMethod.DELETE, httpEntity, ReadableProduct.class);
         System.out.println("Product " + testProductID + " Deleted.");
     }
 
